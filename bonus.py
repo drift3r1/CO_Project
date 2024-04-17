@@ -203,7 +203,7 @@ def binary_string_output(string1):
         
         if(number in Labels):
             a= Labels[number]
-            b=PC-a
+            b=a-PC
 
             imm = convert_and_extend(b,13)
         
@@ -258,10 +258,18 @@ def binary_string_output(string1):
     elif (opcode == "jal"):
         list2=list1[1].split(",")
         register=list2[0]
+        number = list2[1]
+        
         if (register not in REGISTER_NAMES.keys()):
             return("a")
-        immediate=list2[1]
-        immediate = convert_and_extend(immediate, 21)
+        if(number in Labels):
+            a= Labels[number]
+            b=a-PC
+            immediate = convert_and_extend(b,21)
+        elif(check_integer(number)):
+            immediate  = convert_and_extend(number,21)
+        else:
+            return "c"
         immediate = immediate[::-1] # reversing the string to get MSB at index 0 and LSB at last index
         final_str = ""
         final_str += immediate[20] + immediate[10:0:-1] + immediate[11] + immediate[19:11:-1]
