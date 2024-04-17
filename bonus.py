@@ -279,7 +279,7 @@ def binary_string_output(string1):
     else:
         return("b")
 # Define the path to the file
-desktop_path = r"C:\Users\atina\OneDrive\Desktop"
+desktop_path = r"C:\Users\atina\Desktop"
 file_path = desktop_path + "\\open23.txt"
 
 # Open the file in read mode
@@ -730,7 +730,7 @@ def write_memory_to_file(file):
     for i in Memory_values:
         file.write(f"{integer_to_hex(i)}:{to_twos_complement(Memory_values[i])}\n")
 
-desktop_path = r"C:\Users\atina\OneDrive\Desktop"
+desktop_path = r"C:\Users\atina\Desktop"
 input_file = desktop_path + "\\open24.txt"
 output_file = desktop_path + "\\open27.txt"
 
