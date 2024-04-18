@@ -155,3 +155,116 @@ def S_type(inputstr):
     Memory_values[rs1_value+converted_imm] = Register_values[rs2_name]
     pc+=4
     
+def B_type(inputstr):
+    global pc
+    imm =inputstr[0] + inputstr[24] + inputstr[1:7] + inputstr[20:24]+'0'
+    rs2 = inputstr[7:12]
+    rs1 = inputstr[12:17]
+    func3 = inputstr[17:20]
+    opcode = inputstr[25:32]
+    converted_imm = convert(imm)
+    rs1_name = get_register_name(rs1)
+    rs2_name = get_register_name(rs2)
+    rs1_value = Register_values[rs1_name]
+    rs2_value = Register_values[rs2_name]
+
+    if func3 == '000' and rs1_value == rs2_value:  # beq
+        pc += converted_imm
+
+    elif func3 == '001' and rs1_value != rs2_value:  # bne
+        pc += converted_imm
+
+    elif func3 == '100' and rs1_value < rs2_value:  # blt
+        pc += converted_imm
+
+    elif func3 == '101' and rs1_value >= rs2_value:  # bge
+        pc += converted_imm
+
+    elif func3 == '110' and unsigned_integer(rs1_value) < unsigned_integer(rs2_value):  # bltu
+        pc += converted_imm
+
+    elif func3 == '111' and unsigned_integer(rs1_value) >= unsigned_integer(rs2_value):  # bgeu
+        pc += converted_imm
+
+    else:
+        pc += 4
+        
+def U_type(inputstr): 
+    global pc
+    imm = inputstr[0:20] +'000000000000'
+    rd = inputstr[20:25]
+    opcode = inputstr[25:32]
+    converted_imm = convert(imm)
+    rd_name = get_register_name(rd)
+    if opcode == '0110111':  # lui
+        Register_values[rd_name] = converted_imm
+    elif opcode == '0010111':  # auipc
+        Register_values[rd_name] = pc + converted_imm
+    pc += 4
+
+def J_type(inputstr):
+    global pc
+    imm = s[0] + s[12:20] + s[11]+ s[1:11]+ '0'
+    rd = inputstr[20:25]
+    opcode = inputstr[25:32]
+    converted_imm = convert(imm)
+    rd_name = get_register_name(rd)
+    if opcode == '1101111':  # jal
+        Register_values[rd_name] = pc + 4
+        pc = pc + converted_imm
+        pc = pc & ~1  # make the LSB=0
+
+def solve(str):
+    opcode =  str[-7:]
+    if(opcode in R_list):
+        R_type(str)
+    elif(opcode in I_list):
+        I_type(str)
+    elif(opcode in S_list):
+        S_type(str)
+    elif(opcode in B_list):
+        B_type(str)
+    elif(opcode in U_list):
+        U_type(str)
+    elif(opcode in J_list):
+        J_type(str)
+def write_registers_to_file(file):
+    global pc
+    file.write(to_twos_complement(pc) + " ")
+    for i in Register_values:
+        file.write(to_twos_complement(Register_values[i]) + " ")
+    file.write("\n")
+def write_memory_to_file(file):
+    for i in Memory_values:
+        file.write(f"{integer_to_hex(i)}:{to_twos_complement(Memory_values[i])}\n")
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print("Usage: python script.py <input_file> <output_file>")
+        sys.exit(1)
+
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
+
+    with open(input_file, 'r') as file:
+        list1 = [line.strip() for line in file]
+
+    size = len(list1)
+    index = 0
+
+    with open(output_file, 'w') as file:
+        while pc < size * 4 and list1[index] != "00000000000000000000000001100011":
+            if list1[index] == "00000000000000000000000001100011":
+                break
+            a = pc
+            if index < size:
+                s = list1[index]
+                solve(s)
+                Register_values["zero"] = 0
+                Register_values["gp"] = 0
+                Register_values["tp"] = 0
+                write_registers_to_file(file)
+                index = pc // 4
+            else:
+                break
+        write_registers_to_file(file)
+        write_memory_to_file(file)
