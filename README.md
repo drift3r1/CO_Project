@@ -1,4 +1,6 @@
 # CO_Project
-Developing a custom assembler and simulator for a given ISA (risc v)
+Developing a custom Assembler and Simulator for a given ISA (RISC V)
+
+The bonus questions have been implemented separately in the file named 'bonus.py' 
 
 
