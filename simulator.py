@@ -76,3 +76,82 @@ def checkregvalidity(register_code):
 R_instructions={"0000000":{"000":"add"},"0100000":{"000":"sub"},"0000000":{"001":"sll"},
                 "0000000":{"010":"slt"},"0000000":{"011":"sltu"},"0000000":{"100":"xor"},
                 "0000000":{"101":"srl"},"0000000":{"110":"or"},"0000000":{"111":"and"}}
+def R_type(inputstr):
+    global pc
+    funct7 = inputstr[0:7]
+    rs2 = inputstr[7:12]
+    rs1 = inputstr[12:17]
+    funct3 = inputstr[17:20]
+    rd = inputstr[20:25]
+    opcode = inputstr[25:32]
+    rd_name = get_register_name(rd)
+    rs1_name = get_register_name(rs1)
+    rs2_name = get_register_name(rs2)
+    if opcode == '0110011':  # R-type opcode
+        if funct3 == '000':  # add or sub
+            if funct7 == '0000000':  # add
+                Register_values[rd_name] = Register_values[rs1_name] + Register_values[rs2_name]
+                Register_values[rd_name] = ignore_overflow(Register_values[rd_name])
+            elif funct7 == '0100000':  # sub
+                Register_values[rd_name] = Register_values[rs1_name] - Register_values[rs2_name]
+        elif funct3 == '001':  # sll
+            Register_values[rd_name] = Register_values[rs1_name] << (Register_values[rs2_name] & 0x1F)
+        elif funct3 == '010':  # slt
+            Register_values[rd_name] = 1 if Register_values[rs1_name] < Register_values[rs2_name] else 0
+        elif funct3 == '011':  # sltu
+            Register_values[rd_name] = 1 if unsigned_integer(Register_values[rs1_name]) < unsigned_integer(Register_values[rs2_name]) else 0
+        elif funct3 == '100':  # xor
+            Register_values[rd_name] = Register_values[rs1_name] ^ Register_values[rs2_name]
+        elif funct3 == '101':  # srl
+            Register_values[rd_name] = Register_values[rs1_name] >> (Register_values[rs2_name] & 0x1F)
+        elif funct3 == '110':  # or
+            Register_values[rd_name] = Register_values[rs1_name] | Register_values[rs2_name]
+        elif funct3 == '111':  # and
+            Register_values[rd_name] = Register_values[rs1_name] & Register_values[rs2_name]
+    pc += 4
+def I_type(inputstr):
+    global pc
+    immediate = inputstr[0:12]
+    rs1 = inputstr[12:17]
+    func3 = inputstr[17:20]
+    rd = inputstr[20:25]
+    opcode = inputstr[-7:]
+    rs1_name = get_register_name(rs1)
+    rd_name = get_register_name(rd)
+    rs_value = Register_values[rs1_name]
+    if(func3=="010"):
+        extended_imm = convert(immediate)
+        Register_values[rd_name] = Memory_values[rs_value+extended_imm]
+        pc=pc+4
+    elif(func3=="000" and opcode == "0010011"):
+        extended_imm = convert(immediate)
+        Register_values[rd_name] = rs_value  + extended_imm
+        pc+=4
+    elif(func3=="011"):
+        converted_imm = convert(immediate)
+        
+        if(unsigned_binary(immediate)>unsigned_integer(rs_value)):
+            Register_values[rd_name] = 1
+        pc+=4
+    elif(func3=="000" and opcode=="1100111" ):
+        if rd_name == "zero":
+            pc = rs_value+convert(immediate)
+            pc = pc & ~1
+            return
+        Register_values[rd_name]=pc+4
+        pc = rs_value+convert(immediate)
+        pc = pc & ~1
+def S_type(inputstr):
+    global pc
+    immediate = inputstr[0:7] + inputstr[20:25]
+    rs2 = inputstr[7:12]
+    rs1  = inputstr[12:17]
+    func3 = inputstr[17:20]
+    opcode = inputstr[25:32]
+    converted_imm = convert(immediate)
+    rs1_name = get_register_name(rs1)
+    rs2_name = get_register_name(rs2)
+    rs1_value = Register_values[rs1_name]
+    Memory_values[rs1_value+converted_imm] = Register_values[rs2_name]
+    pc+=4
+    
