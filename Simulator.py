@@ -1,4 +1,23 @@
 import sys
+def to_twos_complement(num):
+    # Convert the number to binary and keep the last 32 bits
+    binary = '0b'+format(num & 0xFFFFFFFF, '032b')
+    return binary
+
+def unsigned_binary(binary_string):
+    # Extend binary_string to 32 bits
+    extension_length = 32 - len(binary_string)
+    if binary_string[0] == '1':  # If the number is negative
+        binary_string = '1' * extension_length + binary_string
+    else:  # If the number is positive
+        binary_string = '0' * extension_length + binary_string
+    print(binary_string)
+    return int(binary_string, 2)
+def unsigned_integer(n):
+    ans = to_twos_complement(n)
+    return unsigned_binary(ans[2:])
+
+
 Register_names = {
     "00000": 'zero', "00001": 'ra', "00010": 'sp', "00011": 'gp', "00100": 'tp', "00101": 't0', "00110": 't1', "00111": 't2',
     "01000": 's0', "01001": 's1', "01010": 'a0', "01011": 'a1', "01100": 'a2', "01101": 'a3',
@@ -25,12 +44,6 @@ Register_values = {
 def integer_to_hex(n):
     temp = hex(n)[2:].zfill(8)
     return '0x'+temp
-def to_twos_complement(num):
-    # Convert the number to binary and keep the last 32 bits
-    binary = '0b'+format(num & 0xFFFFFFFF, '032b')
-
-    # Return the binary representation
-    return binary
 def convert(binary_string):
     if binary_string[0] == '1':  # If the number is negative
         return -1 * (int(''.join('1' if b == '0' else '0' for b in binary_string), 2) + 1)
@@ -42,19 +55,7 @@ def ignore_overflow(n):
     num = to_twos_complement(n)
     ans = num[-32:]
     return convert(ans)
-def unsigned_binary(binary_string):
-    # Extend binary_string to 32 bits
-    extension_length = 32 - len(binary_string)
-    if binary_string[0] == '1':  # If the number is negative
-        binary_string = '1' * extension_length + binary_string
-    else:  # If the number is positive
-        binary_string = '0' * extension_length + binary_string
-    return int(binary_string, 2)
-def unsigned_integer(n):
-    if(n>=0):
-        return unsigned_binary(bin(n)[2:])
-    else:
-        return unsigned_binary(bin(n)[3:])
+
 Memory_values={
     65536: 0, 65540: 0, 65544: 0, 65548: 0, 65552: 0, 
     65556: 0, 65560: 0, 65564: 0, 65568: 0, 65572: 0, 
